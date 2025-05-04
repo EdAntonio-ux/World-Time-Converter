@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>World Clocks</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+      font-size: 2rem;
+    }
+
+    .selectors {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 2rem;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: white;
+    }
+
+    .clock-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .clock {
+      background: white;
+      border-radius: 10px;
+      padding: 1.2rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      text-align: center;
+      transition: background 0.3s;
+    }
+
+    .city {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      color: #111827;
+    }
+
+    .time {
+      font-size: 1.4rem;
+      color: #1f2937;
+      transition: opacity 0.3s;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Select Up to 4 Time Zones</h1>
+  <div class="selectors">
+    <div class="selector-group">
+      <label for="tz-0">Time Zone 1</label>
+      <select class="timezone-select" id="tz-0" data-index="0"></select>
+    </div>
+    <div class="selector-group">
+      <label for="tz-1">Time Zone 2</label>
+      <select class="timezone-select" id="tz-1" data-index="1"></select>
+    </div>
+    <div class="selector-group">
+      <label for="tz-2">Time Zone 3</label>
+      <select class="timezone-select" id="tz-2" data-index="2"></select>
+    </div>
+    <div class="selector-group">
+      <label for="tz-3">Time Zone 4</label>
+      <select class="timezone-select" id="tz-3" data-index="3"></select>
+    </div>
+  </div>
+
+  <div class="clock-container" id="clocks"></div>
+
+<script>
+  const timeZones = [
+    { label: "🇺🇸 UTC-12 – Eniwetok", tz: "Etc/GMT+12" },
+    { label: "🇺🇸 UTC-11 – Samoa", tz: "Pacific/Pago_Pago" },
+    { label: "🇺🇸 UTC-10 – Hawaii", tz: "Pacific/Honolulu" },
+    { label: "🇺🇸 UTC-9 – Alaska", tz: "America/Anchorage" },
+    { label: "🇺🇸 UTC-8 – PST, Pacific US", tz: "America/Los_Angeles" },
+    { label: "🇺🇸 UTC-7 – MST, PDT", tz: "America/Denver" },
+    { label: "🇺🇸 UTC-6 – CST, MDT", tz: "America/Chicago" },
+    { label: "🇺🇸 UTC-5 – EST, CDT", tz: "America/New_York" },
+    { label: "🇨🇦 UTC-4 – Atlantic, Canada", tz: "America/Halifax" },
+    { label: "🇧🇷 UTC-3 – Brazil, Buenos Aires", tz: "America/Argentina/Buenos_Aires" },
+    { label: "🌊 UTC-2 – Mid-Atlantic", tz: "Etc/GMT+2" },
+    { label: "🇨🇻 UTC-1 – Cape Verdes", tz: "Atlantic/Cape_Verde" },
+    { label: "🇬🇧 UTC – GMT, Dublin", tz: "Europe/Dublin" },
+    { label: "🇩🇪 UTC+1 – Berlin, Rome", tz: "Europe/Berlin" },
+    { label: "🇮🇱 UTC+2 – Israel, Cairo", tz: "Africa/Cairo" },
+    { label: "🇷🇺 UTC+3 – Moscow, Kuwait", tz: "Europe/Moscow" },
+    { label: "🇦🇪 UTC+4 – Abu Dhabi, Muscat", tz: "Asia/Dubai" },
+    { label: "🇵🇰 UTC+5 – Islamabad, Karachi", tz: "Asia/Karachi" },
+    { label: "🇧🇩 UTC+6 – Almaty, Dhaka", tz: "Asia/Dhaka" },
+    { label: "🇹🇭 UTC+7 – Bangkok, Jakarta", tz: "Asia/Bangkok" },
+    { label: "🇨🇳 UTC+8 – Hong Kong, Beijing", tz: "Asia/Shanghai" },
+    { label: "🇯🇵 UTC+9 – Tokyo, Osaka", tz: "Asia/Tokyo" },
+    { label: "🇦🇺 UTC+10 – Sydney, Melbourne, Guam", tz: "Australia/Sydney" },
+    { label: "🇷🇺 UTC+11 – Magadan, Solomon Is.", tz: "Asia/Magadan" },
+    { label: "🇳🇿 UTC+12 – Fiji, Wellington, Auckland", tz: "Pacific/Auckland" },
+    { label: "🇺🇸 PST/PDT – Pacific Standard/Daylight", tz: "America/Los_Angeles" },
+    { label: "🇺🇸 MST/MDT – Mountain Standard/Daylight", tz: "America/Denver" },
+    { label: "🇺🇸 CST/CDT – Central Standard/Daylight", tz: "America/Chicago" },
+    { label: "🇺🇸 EST/EDT – Eastern Standard/Daylight", tz: "America/New_York" },
+  ];
+
+  const selectedTimeZones = ["America/Los_Angeles", "Europe/Berlin", "Asia/Shanghai", "Asia/Tokyo"];
+  const timezoneSelects = document.querySelectorAll('.timezone-select');
+  const clocksContainer = document.getElementById('clocks');
+
+  function populateDropdowns() {
+    timezoneSelects.forEach((select, i) => {
+      select.innerHTML = '';
+
+      timeZones.forEach(({ label, tz }) => {
+        // Don't allow duplicates
+        const isUsed = selectedTimeZones.includes(tz) && selectedTimeZones[i] !== tz;
+        if (isUsed) return;
+
+        const option = document.createElement('option');
+        option.value = tz;
+        option.textContent = label;
+        if (selectedTimeZones[i] === tz) option.selected = true;
+        select.appendChild(option);
+      });
+
+      select.onchange = (e) => {
+        selectedTimeZones[i] = e.target.value;
+        populateDropdowns(); // re-render to enforce no duplicates
+        renderClocks();
+      };
+    });
+  }
+
+  function renderClocks() {
+    clocksContainer.innerHTML = '';
+    selectedTimeZones.forEach(tz => {
+      const label = timeZones.find(item => item.tz === tz)?.label || tz;
+      const clockDiv = document.createElement('div');
+      clockDiv.className = 'clock';
+      clockDiv.innerHTML = `
+        <div class="city">${label}</div>
+        <div class="time" data-tz="${tz}">--:--:--</div>
+      `;
+      clocksContainer.appendChild(clockDiv);
+    });
+  }
+
+  function updateClocks() {
+    const now = new Date();
+    document.querySelectorAll('.time').forEach(el => {
+      const tz = el.dataset.tz;
+      const time = now.toLocaleTimeString('en-US', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      el.style.opacity = 0.6;
+      setTimeout(() => {
+        el.textContent = time;
+        el.style.opacity = 1;
+      }, 150);
+    });
+  }
+
+  // Initialize
+  populateDropdowns();
+  renderClocks();
+  setInterval(updateClocks, 1000);
+  updateClocks();
+</script>
+
+
+</body>
+</html>
